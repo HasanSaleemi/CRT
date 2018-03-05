@@ -69,6 +69,9 @@ public class Main {
 
         /* Do not alter the code above for your submission. */
         /* Write your code below. */
+
+        Craig test = new Craig();
+
         
         // System.out.println("GLHF");
         
