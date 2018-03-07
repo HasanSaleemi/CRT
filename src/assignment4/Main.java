@@ -67,15 +67,83 @@ public class Main {
             kb = new Scanner(System.in); // use keyboard and console
         }
 
-        /* Do not alter the code above for your submission. */
-        /* Write your code below. */
+        while(true){
+            String fullLine = kb.nextLine();
+            Scanner parseCmd = new Scanner(fullLine);
+            if(!parseCmd.hasNext())
+                continue;
+            String cmd = parseCmd.next();
 
-        Craig test = new Craig();
+            if(cmd.equals("quit")) {
+                if(parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
 
-        
-        // System.out.println("GLHF");
-        
-        /* Write your code above */
+                break;
+            } else if(cmd.equals("show")) {
+                if(parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+
+                Critter.displayWorld();
+            } else if(cmd.equals("step")) {
+                if(!parseCmd.hasNextInt()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+                int count = parseCmd.nextInt();
+                if(parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+
+            } else if(cmd.equals("seed")) {
+                if(!parseCmd.hasNextLong()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+                long seed = parseCmd.nextLong();
+                if(parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+
+                System.out.println("random seed set to " + seed);
+                Critter.setSeed(seed);
+            } else if(cmd.equals("make")) {
+                if(!parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+                String className = parseCmd.next();
+                if(!parseCmd.hasNextInt()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+                int count = parseCmd.nextInt();
+                if(parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+
+            } else if(cmd.equals("stats")) {
+                if(!parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+                String className = parseCmd.next();
+                if(parseCmd.hasNext()){
+                    System.out.println("error processing: " + fullLine);
+                    continue;
+                }
+
+            } else {
+                System.out.println("error processing: " + fullLine);
+            }
+        }
+
         System.out.flush();
 
     }

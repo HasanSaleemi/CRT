@@ -1,18 +1,13 @@
 package assignment4;
 /* CRITTERS Critter.java
  * EE422C Project 4 submission by
- * Replace <...> with your actual data.
- * <Student1 Name>
- * <Student1 EID>
- * <Student1 5-digit Unique No.>
- * <Student2 Name>
- * <Student2 EID>
- * <Student2 5-digit Unique No.>
- * Slip days used: <0>
- * Fall 2016
+ * Hasan Saleemi
+ * has2375
+ * Fall 2018
  */
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 /* see the PDF for descriptions of the methods and fields in this class
@@ -20,15 +15,24 @@ import java.util.List;
  * no new public, protected or default-package code or data can be added to Critter
  */
 
-
 public abstract class Critter {
 	private static String myPackage;
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
 	private static List<Critter> babies = new java.util.ArrayList<Critter>();
 
+	private static ArrayList<ArrayList<ArrayList<Critter>>> grid;
+
 	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
 	static {
 		myPackage = Critter.class.getPackage().toString().split(" ")[1];
+
+		grid = new ArrayList<ArrayList<ArrayList<Critter>>>();
+		for(int x = 0; x < Params.world_width; x++){
+			grid.add(x, new ArrayList<>());
+			for(int y = 0; y < Params.world_height; y++){
+				grid.get(x).add(y, new ArrayList<>());
+			}
+		}
 	}
 	
 	private static java.util.Random rand = new java.util.Random();
@@ -61,7 +65,7 @@ public abstract class Critter {
 	}
 
 	public abstract void doTimeStep();
-	public abstract boolean fight(String oponent);
+	public abstract boolean fight(String opponent);
 	
 	/**
 	 * create and initialize a Critter subclass.
@@ -168,14 +172,47 @@ public abstract class Critter {
 	 * Clear the world of all critters, dead and alive
 	 */
 	public static void clearWorld() {
-		// Complete this method.
+		for(int x = 0; x < Params.world_width; x++){
+			for(int y = 0; y < Params.world_height; y++){
+				grid.get(x).set(y, new ArrayList<>());
+			}
+		}
 	}
 	
 	public static void worldTimeStep() {
 		// Complete this method.
 	}
-	
+
+	private static void printTopBottom(){
+		System.out.print("+");
+		for(int i = 0; i < Params.world_width; i++)
+			System.out.print("-");
+		System.out.print("+");
+	}
 	public static void displayWorld() {
-		// Complete this method.
+		for(int y = 0; y < Params.world_height; y++){
+			if(y == 0){
+				printTopBottom();
+				System.out.println();
+			}
+
+			for(int x = 0; x < Params.world_width; x++){
+				if(x == 0)
+					System.out.print("|");
+
+				if(grid.get(x).get(y).size() == 0){
+					System.out.print(" ");
+				}
+
+				if(x == Params.world_width - 1)
+					System.out.print("|");
+			}
+
+			if(y == Params.world_height - 1){
+				System.out.println();
+				printTopBottom();
+			}
+			System.out.println();
+		}
 	}
 }
