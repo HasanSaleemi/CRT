@@ -7,6 +7,9 @@ package assignment4;
  */
 
 
+import com.sun.javafx.tools.packager.Param;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,6 +81,17 @@ public abstract class Critter {
 	 * @throws InvalidCritterException
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
+		try {
+			Critter newCritter = (Critter)Class.forName("assignment4." + critter_class_name).getDeclaredConstructor().newInstance();
+			newCritter.x_coord = Critter.getRandomInt(Params.world_width);
+			newCritter.y_coord = Critter.getRandomInt(Params.world_height);
+			newCritter.energy = Params.start_energy;
+
+			population.add(newCritter);
+			grid.get(newCritter.x_coord).get(newCritter.y_coord).add(newCritter);
+		}catch (NoSuchMethodException | InvocationTargetException |ClassNotFoundException | InstantiationException | IllegalAccessException e){
+			throw new InvalidCritterException(critter_class_name);
+		}
 	}
 	
 	/**
@@ -202,6 +216,8 @@ public abstract class Critter {
 
 				if(grid.get(x).get(y).size() == 0){
 					System.out.print(" ");
+				} else {
+					System.out.print(grid.get(x).get(y).get(0));
 				}
 
 				if(x == Params.world_width - 1)

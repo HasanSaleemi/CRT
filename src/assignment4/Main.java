@@ -1,15 +1,9 @@
 package assignment4;
 /* CRITTERS Main.java
  * EE422C Project 4 submission by
- * Replace <...> with your actual data.
- * <Student1 Name>
- * <Student1 EID>
- * <Student1 5-digit Unique No.>
- * <Student2 Name>
- * <Student2 EID>
- * <Student2 5-digit Unique No.>
- * Slip days used: <0>
- * Fall 2016
+ * Hasan Saleemi
+ * has2375
+ * Fall 2018
  */
 
 import java.util.Scanner;
@@ -123,11 +117,18 @@ public class Main {
                     continue;
                 }
                 int count = parseCmd.nextInt();
-                if(parseCmd.hasNext()){
+                if(parseCmd.hasNext() || count < 1){
                     System.out.println("error processing: " + fullLine);
                     continue;
                 }
 
+                try{
+                    for(int i = 0; i < count; i++)
+                        Critter.makeCritter(className);
+                    System.out.println("added " + count + " " + className);
+                } catch(InvalidCritterException e){
+                    System.out.println("error processing: " + fullLine);
+                }
             } else if(cmd.equals("stats")) {
                 if(!parseCmd.hasNext()){
                     System.out.println("error processing: " + fullLine);
@@ -140,7 +141,7 @@ public class Main {
                 }
 
             } else {
-                System.out.println("error processing: " + fullLine);
+                System.out.println("invalid command: " + fullLine);
             }
         }
 
