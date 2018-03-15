@@ -7,8 +7,6 @@ package assignment4;
  */
 
 
-import com.sun.javafx.tools.packager.Param;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +44,7 @@ public abstract class Critter {
 	public static void setSeed(long new_seed) {
 		rand = new java.util.Random(new_seed);
 	}
-	
-	
+
 	/* a one-character long string that visually depicts your critter in the ASCII interface */
 	public String toString() { return ""; }
 	
@@ -56,15 +53,73 @@ public abstract class Critter {
 	
 	private int x_coord;
 	private int y_coord;
+
+	private void moveCrit(int direction){
+		switch (direction) {
+			case 0:
+				x_coord++;
+				break;
+			case 1:
+				x_coord++;
+				y_coord--;
+				break;
+			case 2:
+				y_coord--;
+				break;
+			case 3:
+				x_coord--;
+				y_coord--;
+				break;
+			case 4:
+				x_coord--;
+				break;
+			case 5:
+				x_coord--;
+				y_coord++;
+				break;
+			case 6:
+				y_coord++;
+				break;
+			case 7:
+				x_coord++;
+				y_coord++;
+				break;
+		}
+		x_coord =  x_coord - Math.floorDiv(x_coord, Params.world_width)*Params.world_width;
+		y_coord =  y_coord - Math.floorDiv(y_coord, Params.world_height)*Params.world_height;
+	}
 	
 	protected final void walk(int direction) {
+		grid.get(x_coord).get(y_coord).remove(this);
+
+		energy-=Params.walk_energy_cost;
+		moveCrit(direction);
+
+		grid.get(x_coord).get(y_coord).add(this);
 	}
 	
 	protected final void run(int direction) {
-		
+		grid.get(x_coord).get(y_coord).remove(this);
+
+		energy-=Params.run_energy_cost;
+		moveCrit(direction);
+		moveCrit(direction);
+
+		grid.get(x_coord).get(y_coord).add(this);
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
+		if(energy < Params.min_reproduce_energy)
+			return;
+
+		offspring.energy = energy/2;
+		offspring.x_coord = x_coord;
+		offspring.y_coord = y_coord;
+		offspring.moveCrit(direction);
+
+		energy/=2;
+
+		babies.add(offspring);
 	}
 
 	public abstract void doTimeStep();
@@ -93,7 +148,7 @@ public abstract class Critter {
 			throw new InvalidCritterException(critter_class_name);
 		}
 	}
-	
+
 	/**
 	 * Gets a list of critters of a specific type.
 	 * @param critter_class_name What kind of Critter is to be listed.  Unqualified class name.
@@ -102,7 +157,18 @@ public abstract class Critter {
 	 */
 	public static List<Critter> getInstances(String critter_class_name) throws InvalidCritterException {
 		List<Critter> result = new java.util.ArrayList<Critter>();
-	
+
+		try{
+			Class.forName("assignment4." + critter_class_name);
+		}catch (ClassNotFoundException e){
+			throw new InvalidCritterException(critter_class_name);
+		}
+
+		for(Critter c: population){
+			if(c.getClass().getName().equals("assignment4." + critter_class_name))
+				result.add(c);
+		}
+
 		return result;
 	}
 	
@@ -146,11 +212,15 @@ public abstract class Critter {
 		}
 		
 		protected void setX_coord(int new_x_coord) {
+			grid.get(super.x_coord).get(super.y_coord).remove(this);
 			super.x_coord = new_x_coord;
+			grid.get(super.x_coord).get(super.y_coord).add(this);
 		}
 		
 		protected void setY_coord(int new_y_coord) {
+			grid.get(super.x_coord).get(super.y_coord).remove(this);
 			super.y_coord = new_y_coord;
+			grid.get(super.x_coord).get(super.y_coord).add(this);
 		}
 		
 		protected int getX_coord() {
@@ -191,10 +261,83 @@ public abstract class Critter {
 				grid.get(x).set(y, new ArrayList<>());
 			}
 		}
+		population.clear();
+		babies.clear();
 	}
-	
+
+	private static void removeDeadCritters(){
+		List<Critter> newPop = new ArrayList<>();
+		for(Critter c: population) {
+			if(c.energy	> 0){
+				newPop.add(c);
+			} else {
+				grid.get(c.x_coord).get(c.y_coord).remove(c);
+			}
+		}
+		population = newPop;
+	}
 	public static void worldTimeStep() {
-		// Complete this method.
+		// add babies
+		for(Critter c: babies){
+			population.add(c);
+			grid.get(c.x_coord).get(c.y_coord).add(c);
+		}
+		babies.clear();
+
+		// do time step
+		ArrayList<ArrayList<Integer>> coords = new ArrayList<>();
+
+		for(Critter c: population) {
+			c.energy-=Params.rest_energy_cost;
+			c.doTimeStep();
+
+			ArrayList<Integer> saveCoords = new ArrayList<>();
+			saveCoords.add(c.x_coord);
+			saveCoords.add(c.y_coord);
+			coords.add(saveCoords);
+		}
+
+		// handle encounters
+		for(ArrayList<Integer> gridSpot: coords){
+			ArrayList<Critter> spot = grid.get(gridSpot.get(0)).get(gridSpot.get(1));
+			while(spot.size() > 1){
+				Critter A = spot.get(0);
+				Critter B = spot.get(1);
+
+				spot.remove(A);
+				spot.remove(B);
+
+				boolean AFight = A.fight(B.toString());
+				boolean BFight = B.fight(A.toString());
+
+				if(A.x_coord == B.x_coord && A.y_coord == B.y_coord && (A.energy > 0 && B.energy > 0)){
+					int ARand = AFight ? Critter.getRandomInt(A.energy) : 0;
+					int BRand = BFight ? Critter.getRandomInt(B.energy) : 0;
+
+					if(ARand > BRand){
+						A.energy+=B.energy/2;
+						B.energy = 0;
+					} else {
+						B.energy+=A.energy/2;
+						A.energy = 0;
+					}
+				}
+
+				grid.get(B.x_coord).get(B.y_coord).add(0, B);
+				grid.get(A.x_coord).get(A.y_coord).add(0, A);
+				removeDeadCritters();
+			}
+		}
+
+		// remove ded
+		removeDeadCritters();
+
+		// create new algae
+		for(int i = 0; i < Params.refresh_algae_count; i++) {
+			try {
+				makeCritter("Algae");
+			} catch (InvalidCritterException ignored) { }
+		}
 	}
 
 	private static void printTopBottom(){
@@ -216,9 +359,11 @@ public abstract class Critter {
 
 				if(grid.get(x).get(y).size() == 0){
 					System.out.print(" ");
-				} else {
+				} else if(grid.get(x).get(y).size() > 0){
 					System.out.print(grid.get(x).get(y).get(0));
-				}
+				} /*else {
+					System.out.print("*");
+				}*/
 
 				if(x == Params.world_width - 1)
 					System.out.print("|");

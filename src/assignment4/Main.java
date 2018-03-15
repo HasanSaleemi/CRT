@@ -6,9 +6,10 @@ package assignment4;
  * Fall 2018
  */
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Scanner;
 import java.io.*;
-
 
 /*
  * Usage: java <pkgname>.Main <input file> test
@@ -61,87 +62,121 @@ public class Main {
             kb = new Scanner(System.in); // use keyboard and console
         }
 
-        while(true){
+        primaryLoop:
+        while (true) {
             String fullLine = kb.nextLine();
             Scanner parseCmd = new Scanner(fullLine);
-            if(!parseCmd.hasNext())
+            if (!parseCmd.hasNext())
                 continue;
             String cmd = parseCmd.next();
 
-            if(cmd.equals("quit")) {
-                if(parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
+            switch (cmd) {
+                case "quit":
+                    // error check
+                        if (parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        break primaryLoop;
+                case "show":
+                    // error check
+                        if (parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        Critter.displayWorld();
+                    break;
+                case "step": {
+                    // error check
+                        if (!parseCmd.hasNextInt()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                        int count = parseCmd.nextInt();
+                        if (parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        for (int i = 0; i < count; i++)
+                            Critter.worldTimeStep();
+                        if(DEBUG){
+                            System.out.print("stepped " + count);
+                            if (count != 1)
+                                System.out.println(" times");
+                            else
+                                System.out.println(" time");
+                        }
+                    break;
                 }
-
-                break;
-            } else if(cmd.equals("show")) {
-                if(parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
+                case "seed":
+                    // error check
+                        if (!parseCmd.hasNextLong()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                        long seed = parseCmd.nextLong();
+                        if (parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        if(DEBUG)
+                            System.out.println("random seed set to " + seed);
+                        Critter.setSeed(seed);
+                    break;
+                case "make": {
+                    // error check
+                        if (!parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                        String className = parseCmd.next();
+                        if (!parseCmd.hasNextInt()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                        int count = parseCmd.nextInt();
+                        if (parseCmd.hasNext() || count < 1) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        try {
+                            for (int i = 0; i < count; i++)
+                                Critter.makeCritter(className);
+                            if(DEBUG)
+                                System.out.println("added " + count + " " + className);
+                        } catch (InvalidCritterException e) {
+                            System.out.println("error processing: " + fullLine);
+                        }
+                    break;
                 }
-
-                Critter.displayWorld();
-            } else if(cmd.equals("step")) {
-                if(!parseCmd.hasNextInt()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
+                case "stats": {
+                    // error check
+                        if (!parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                        String className = parseCmd.next();
+                        if (parseCmd.hasNext()) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        try{
+                            List<Critter> getCrits = Critter.getInstances(className);
+                            Class.forName("assignment4." + className).getMethod("runStats", List.class).invoke(null, getCrits); // lol
+                        } catch (InvalidCritterException | ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                            System.out.println("error processing: " + fullLine);
+                        }
+                    break;
                 }
-                int count = parseCmd.nextInt();
-                if(parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-
-            } else if(cmd.equals("seed")) {
-                if(!parseCmd.hasNextLong()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-                long seed = parseCmd.nextLong();
-                if(parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-
-                System.out.println("random seed set to " + seed);
-                Critter.setSeed(seed);
-            } else if(cmd.equals("make")) {
-                if(!parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-                String className = parseCmd.next();
-                if(!parseCmd.hasNextInt()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-                int count = parseCmd.nextInt();
-                if(parseCmd.hasNext() || count < 1){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-
-                try{
-                    for(int i = 0; i < count; i++)
-                        Critter.makeCritter(className);
-                    System.out.println("added " + count + " " + className);
-                } catch(InvalidCritterException e){
-                    System.out.println("error processing: " + fullLine);
-                }
-            } else if(cmd.equals("stats")) {
-                if(!parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-                String className = parseCmd.next();
-                if(parseCmd.hasNext()){
-                    System.out.println("error processing: " + fullLine);
-                    continue;
-                }
-
-            } else {
-                System.out.println("invalid command: " + fullLine);
+                default:
+                    System.out.println("invalid command: " + fullLine);
+                    break;
             }
         }
 
