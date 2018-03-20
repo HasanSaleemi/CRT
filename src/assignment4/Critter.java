@@ -6,7 +6,6 @@ package assignment4;
  * Fall 2018
  */
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +136,7 @@ public abstract class Critter {
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
 		try {
-			Critter newCritter = (Critter)Class.forName("assignment4." + critter_class_name).getDeclaredConstructor().newInstance();
+			Critter newCritter = (Critter)Class.forName(myPackage + "." + critter_class_name).getDeclaredConstructor().newInstance();
 			newCritter.x_coord = Critter.getRandomInt(Params.world_width);
 			newCritter.y_coord = Critter.getRandomInt(Params.world_height);
 			newCritter.energy = Params.start_energy;
@@ -159,13 +158,13 @@ public abstract class Critter {
 		List<Critter> result = new java.util.ArrayList<Critter>();
 
 		try{
-			Class.forName("assignment4." + critter_class_name);
+			Class.forName(myPackage + "." + critter_class_name);
 		}catch (ClassNotFoundException e){
 			throw new InvalidCritterException(critter_class_name);
 		}
 
 		for(Critter c: population){
-			if(c.getClass().getName().equals("assignment4." + critter_class_name))
+			if(c.getClass().getName().equals(myPackage + "." + critter_class_name))
 				result.add(c);
 		}
 
@@ -304,9 +303,6 @@ public abstract class Critter {
 				Critter A = spot.get(0);
 				Critter B = spot.get(1);
 
-				spot.remove(A);
-				spot.remove(B);
-
 				boolean AFight = A.fight(B.toString());
 				boolean BFight = B.fight(A.toString());
 
@@ -323,8 +319,6 @@ public abstract class Critter {
 					}
 				}
 
-				grid.get(B.x_coord).get(B.y_coord).add(0, B);
-				grid.get(A.x_coord).get(A.y_coord).add(0, A);
 				removeDeadCritters();
 			}
 		}

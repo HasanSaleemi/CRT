@@ -7,6 +7,7 @@ package assignment4;
  */
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 import java.io.*;
@@ -68,12 +69,13 @@ public class Main {
             Scanner parseCmd = new Scanner(fullLine);
             if (!parseCmd.hasNext())
                 continue;
-            String cmd = parseCmd.next();
+            parseCmd.next();
+            String[] cmds = fullLine.split(" ");
 
-            switch (cmd) {
+            switch (cmds[0]) {
                 case "quit":
                     // error check
-                        if (parseCmd.hasNext()) {
+                        if (cmds.length != 1) {
                             System.out.println("error processing: " + fullLine);
                             continue;
                         }
@@ -81,7 +83,7 @@ public class Main {
                         break primaryLoop;
                 case "show":
                     // error check
-                        if (parseCmd.hasNext()) {
+                        if (cmds.length != 1) {
                             System.out.println("error processing: " + fullLine);
                             continue;
                         }
@@ -90,87 +92,93 @@ public class Main {
                     break;
                 case "step": {
                     // error check
-                        if (!parseCmd.hasNextInt()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                        int count = parseCmd.nextInt();
-                        if (parseCmd.hasNext()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                    // command
-                        for (int i = 0; i < count; i++)
-                            Critter.worldTimeStep();
-                        if(DEBUG){
-                            System.out.print("stepped " + count);
-                            if (count != 1)
-                                System.out.println(" times");
-                            else
-                                System.out.println(" time");
-                        }
-                    break;
-                }
-                case "seed":
-                    // error check
-                        if (!parseCmd.hasNextLong()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                        long seed = parseCmd.nextLong();
-                        if (parseCmd.hasNext()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                    // command
-                        if(DEBUG)
-                            System.out.println("random seed set to " + seed);
-                        Critter.setSeed(seed);
-                    break;
-                case "make": {
-                    // error check
-                        if (!parseCmd.hasNext()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                        String className = parseCmd.next();
-                        if (!parseCmd.hasNextInt()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                        int count = parseCmd.nextInt();
-                        if (parseCmd.hasNext() || count < 1) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                    // command
-                        try {
-                            for (int i = 0; i < count; i++)
-                                Critter.makeCritter(className);
-                            if(DEBUG)
-                                System.out.println("added " + count + " " + className);
-                        } catch (InvalidCritterException e) {
-                            System.out.println("error processing: " + fullLine);
-                        }
-                    break;
-                }
-                case "stats": {
-                    // error check
-                        if (!parseCmd.hasNext()) {
-                            System.out.println("error processing: " + fullLine);
-                            continue;
-                        }
-                        String className = parseCmd.next();
-                        if (parseCmd.hasNext()) {
+                        if (cmds.length != 1 && cmds.length != 2) {
                             System.out.println("error processing: " + fullLine);
                             continue;
                         }
                     // command
                         try{
-                            List<Critter> getCrits = Critter.getInstances(className);
-                            Class.forName("assignment4." + className).getMethod("runStats", List.class).invoke(null, getCrits); // lol
-                        } catch (InvalidCritterException | ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                            int count = 1;
+                            if(cmds.length == 2)
+                                count = parseCmd.nextInt();
+
+                            for (int i = 0; i < count; i++)
+                                Critter.worldTimeStep();
+                            if(DEBUG){
+                                System.out.print("stepped " + count);
+                                if (count != 1)
+                                    System.out.println(" times");
+                                else
+                                    System.out.println(" time");
+                            }
+                        } catch(InputMismatchException ignored) {
                             System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    break;
+                }
+                case "seed":
+                    // error check
+                        if (cmds.length != 2) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                    try{
+                        long seed = parseCmd.nextLong();
+
+                        if(DEBUG)
+                            System.out.println("random seed set to " + seed);
+                        Critter.setSeed(seed);
+                    }catch(InputMismatchException ignored){
+                        System.out.println("error processing: " + fullLine);
+                        continue;
+                    }
+                    break;
+                case "make": {
+                    // error check
+                        if (cmds.length != 2 && cmds.length != 3){
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        try{
+                            String className = parseCmd.next();
+                            int count = 1;
+                            if(cmds.length == 3)
+                                count = parseCmd.nextInt();
+                            try {
+                                for (int i = 0; i < count; i++)
+                                    Critter.makeCritter(className);
+                                if(DEBUG)
+                                    System.out.println("added " + count + " " + className);
+                            } catch (InvalidCritterException e) {
+                                System.out.println("error processing: " + fullLine);
+                            }
+                        }catch(InputMismatchException ignored){
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    break;
+                }
+                case "stats": {
+                    // error check
+                        if (cmds.length != 2) {
+                            System.out.println("error processing: " + fullLine);
+                            continue;
+                        }
+                    // command
+                        try{
+                            String className = parseCmd.next();
+                            try{
+                                List<Critter> getCrits = Critter.getInstances(className);
+                                Class.forName(myPackage + "." + className).getMethod("runStats", List.class).invoke(null, getCrits); // lol
+                            } catch (InvalidCritterException | ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                                System.out.println("error processing: " + fullLine);
+                            }
+                        }catch(InputMismatchException ignored){
+                            System.out.println("error processing: " + fullLine);
+                            continue;
                         }
                     break;
                 }
