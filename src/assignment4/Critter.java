@@ -21,18 +21,11 @@ public abstract class Critter {
 	private static List<Critter> babies = new java.util.ArrayList<Critter>();
 
 	private static ArrayList<ArrayList<ArrayList<Critter>>> grid;
+	private boolean hasMoved = false;
 
 	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
 	static {
 		myPackage = Critter.class.getPackage().toString().split(" ")[1];
-
-		grid = new ArrayList<ArrayList<ArrayList<Critter>>>();
-		for(int x = 0; x < Params.world_width; x++){
-			grid.add(x, new ArrayList<>());
-			for(int y = 0; y < Params.world_height; y++){
-				grid.get(x).add(y, new ArrayList<>());
-			}
-		}
 	}
 	
 	private static java.util.Random rand = new java.util.Random();
@@ -83,12 +76,19 @@ public abstract class Critter {
 				x_coord++;
 				y_coord++;
 				break;
+            default:
+                break;
 		}
 		x_coord =  x_coord - Math.floorDiv(x_coord, Params.world_width)*Params.world_width;
 		y_coord =  y_coord - Math.floorDiv(y_coord, Params.world_height)*Params.world_height;
 	}
 	
 	protected final void walk(int direction) {
+		if(hasMoved){
+			energy-=Params.walk_energy_cost;
+			return;
+		}
+		hasMoved = true;
 		grid.get(x_coord).get(y_coord).remove(this);
 
 		energy-=Params.walk_energy_cost;
@@ -98,6 +98,11 @@ public abstract class Critter {
 	}
 	
 	protected final void run(int direction) {
+		if(hasMoved){
+			energy-=Params.run_energy_cost;
+			return;
+		}
+		hasMoved = true;
 		grid.get(x_coord).get(y_coord).remove(this);
 
 		energy-=Params.run_energy_cost;
@@ -105,6 +110,10 @@ public abstract class Critter {
 		moveCrit(direction);
 
 		grid.get(x_coord).get(y_coord).add(this);
+	}
+
+	private void flee(){
+
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
@@ -116,7 +125,7 @@ public abstract class Critter {
 		offspring.y_coord = y_coord;
 		offspring.moveCrit(direction);
 
-		energy/=2;
+		energy-=offspring.energy;
 
 		babies.add(offspring);
 	}
@@ -255,11 +264,14 @@ public abstract class Critter {
 	 * Clear the world of all critters, dead and alive
 	 */
 	public static void clearWorld() {
+		grid = new ArrayList<ArrayList<ArrayList<Critter>>>();
 		for(int x = 0; x < Params.world_width; x++){
+			grid.add(x, new ArrayList<>());
 			for(int y = 0; y < Params.world_height; y++){
-				grid.get(x).set(y, new ArrayList<>());
+				grid.get(x).add(y, new ArrayList<>());
 			}
 		}
+
 		population.clear();
 		babies.clear();
 	}
@@ -287,6 +299,7 @@ public abstract class Critter {
 		ArrayList<ArrayList<Integer>> coords = new ArrayList<>();
 
 		for(Critter c: population) {
+			c.hasMoved = false;
 			c.energy-=Params.rest_energy_cost;
 			c.doTimeStep();
 
@@ -305,6 +318,11 @@ public abstract class Critter {
 
 				boolean AFight = A.fight(B.toString());
 				boolean BFight = B.fight(A.toString());
+
+				if(!AFight)
+				    A.flee();
+				if(!BFight)
+				    B.flee();
 
 				if(A.x_coord == B.x_coord && A.y_coord == B.y_coord && (A.energy > 0 && B.energy > 0)){
 					int ARand = AFight ? Critter.getRandomInt(A.energy) : 0;

@@ -37,7 +37,8 @@ public class Main {
      * @param args args can be empty.  If not empty, provide two parameters -- the first is a file name, 
      * and the second is test (for test output, where all output to be directed to a String), or nothing.
      */
-    public static void main(String[] args) { 
+    public static void main(String[] args) {
+        Critter.clearWorld();
         if (args.length != 0) {
             try {
                 inputFile = args[0];
@@ -65,6 +66,7 @@ public class Main {
 
         primaryLoop:
         while (true) {
+            System.out.print("critters>");
             String fullLine = kb.nextLine();
             Scanner parseCmd = new Scanner(fullLine);
             if (!parseCmd.hasNext())
@@ -182,9 +184,10 @@ public class Main {
                         }
                     break;
                 }
-                default:
+                default: {
                     System.out.println("invalid command: " + fullLine);
                     break;
+                }
             }
         }
 
