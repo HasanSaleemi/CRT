@@ -3,6 +3,8 @@ package assignment4;
  * EE422C Project 4 submission by
  * Hasan Saleemi
  * has2375
+ * Jerry Yang
+ * jhy395
  * Fall 2018
  */
 
