@@ -10,11 +10,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-/* see the PDF for descriptions of the methods and fields in this class
- * you may add fields, methods or inner classes to Critter ONLY if you make your additions private
- * no new public, protected or default-package code or data can be added to Critter
- */
-
 public abstract class Critter {
 	private static String myPackage;
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
@@ -112,8 +107,32 @@ public abstract class Critter {
 		grid.get(x_coord).get(y_coord).add(this);
 	}
 
-	private void flee(){
+	private final int[][] dirTrans = {
+			{3, 4, 5},
+			{2, 8, 6},
+			{1, 0, 7}
+	};
 
+	private void flee(){
+		if(this instanceof TestCritter)
+			return;
+		if(hasMoved){
+			energy-=Params.walk_energy_cost;
+			return;
+		}
+		ArrayList<Integer> spots = new ArrayList<>();
+
+		for(int dx = -1; dx < 2; dx++){
+			for(int dy = -1; dy < 2; dy++){
+				if(grid.get( (x_coord + dx) - Math.floorDiv(x_coord + dx, Params.world_width)*Params.world_width ).get( (y_coord + dy) - Math.floorDiv(y_coord + dy, Params.world_height)*Params.world_height ).size() == 0)
+					spots.add(dirTrans[dx + 1][dy + 1]);
+			}
+		}
+
+		if(spots.size() > 0)
+			walk( spots.get(getRandomInt(spots.size())) );
+		else
+			energy-=Params.walk_energy_cost;
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
@@ -152,7 +171,7 @@ public abstract class Critter {
 
 			population.add(newCritter);
 			grid.get(newCritter.x_coord).get(newCritter.y_coord).add(newCritter);
-		}catch (NoSuchMethodException | InvocationTargetException |ClassNotFoundException | InstantiationException | IllegalAccessException e){
+		}catch (ClassCastException | NoSuchMethodException | InvocationTargetException | ClassNotFoundException | InstantiationException | IllegalAccessException e){
 			throw new InvalidCritterException(critter_class_name);
 		}
 	}
@@ -300,7 +319,6 @@ public abstract class Critter {
 
 		for(Critter c: population) {
 			c.hasMoved = false;
-			c.energy-=Params.rest_energy_cost;
 			c.doTimeStep();
 
 			ArrayList<Integer> saveCoords = new ArrayList<>();
@@ -340,6 +358,10 @@ public abstract class Critter {
 				removeDeadCritters();
 			}
 		}
+
+        for(Critter c: population) {
+            c.energy-=Params.rest_energy_cost;
+        }
 
 		// remove ded
 		removeDeadCritters();

@@ -165,7 +165,7 @@ public class Main {
                 }
                 case "stats": {
                     // error check
-                        if (cmds.length != 2) {
+                        if (cmds.length != 2 || cmds[1].equals("Critter")) {
                             System.out.println("error processing: " + fullLine);
                             continue;
                         }
